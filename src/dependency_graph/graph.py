@@ -22,6 +22,7 @@ class Graph:
 
     edges: dict[str, dict[str, str]]
     depths: dict[str, int]
+    load_order: tuple[str, ...]
 
 
 def load_test_repository(path):
@@ -53,9 +54,11 @@ def build_graph(root, max_depth, dependencies_for):
     """Collect reachable edges with an iterative breadth-first search."""
     depths = {root: 0}
     edges = {}
+    load_order = []
     queue = deque([root])
     while queue:
         package = queue.popleft()
+        load_order.append(package)
         depth = depths[package]
         if depth == max_depth:
             edges[package] = {}
@@ -66,7 +69,7 @@ def build_graph(root, max_depth, dependencies_for):
             if child not in depths:
                 depths[child] = depth + 1
                 queue.append(child)
-    return Graph(edges, depths)
+    return Graph(edges, depths, tuple(load_order))
 
 
 def graph_from_config(config):

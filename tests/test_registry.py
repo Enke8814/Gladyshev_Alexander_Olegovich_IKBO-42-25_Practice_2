@@ -76,17 +76,19 @@ class RegistryTests(unittest.TestCase):
             direct_dependencies("https://registry.npmjs.org", "x")
 
     @patch("main.graph_from_config")
-    def test_cli_prints_graph(self, build):
-        """The CLI displays root edges and shortest distances."""
+    def test_cli_prints_load_order(self, build):
+        """The CLI displays the deterministic BFS fetch order."""
         build.return_value = Graph(
             {"express": {"accepts": "~1.3"}, "accepts": {}},
             {"express": 0, "accepts": 1},
+            ("express", "accepts"),
         )
         output = StringIO()
         with redirect_stdout(output):
             code = main(["--config", str(PROJECT / "config.example.xml")])
         self.assertEqual(code, 0)
-        self.assertIn("accepts (~1.3)", output.getvalue())
+        self.assertIn("1. express (глубина 0)", output.getvalue())
+        self.assertIn("2. accepts (глубина 1)", output.getvalue())
         build.assert_called_once()
 
 

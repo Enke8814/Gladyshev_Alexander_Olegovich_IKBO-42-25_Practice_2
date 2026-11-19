@@ -37,6 +37,7 @@ class GraphTests(unittest.TestCase):
 
         graph = build_graph("A", 3, dependencies_for)
         self.assertEqual(calls, ["A", "B", "C", "D"])
+        self.assertEqual(graph.load_order, ("A", "B", "C", "D"))
         self.assertEqual(graph.depths, {"A": 0, "B": 1, "C": 1, "D": 2})
         self.assertIn("D", graph.edges["B"])
         self.assertIn("D", graph.edges["C"])
@@ -53,6 +54,7 @@ class GraphTests(unittest.TestCase):
 
         graph = build_graph("A", 8, dependencies_for)
         self.assertEqual(calls, ["A", "B", "C"])
+        self.assertEqual(graph.load_order, ("A", "B", "C"))
         self.assertEqual(graph.edges["C"], {"A": ""})
 
     def test_depth_zero_and_one(self):
@@ -60,9 +62,11 @@ class GraphTests(unittest.TestCase):
         source = {"A": {"B": ""}, "B": {"C": ""}}
         shallow = build_graph("A", 0, source.__getitem__)
         self.assertEqual(shallow.edges, {"A": {}})
+        self.assertEqual(shallow.load_order, ("A",))
         one = build_graph("A", 1, source.__getitem__)
         self.assertEqual(one.edges, {"A": {"B": ""}, "B": {}})
         self.assertNotIn("C", one.depths)
+        self.assertEqual(one.load_order, ("A", "B"))
 
     def test_real_test_fixture(self):
         """Load the checked-in JSON graph through the XML configuration."""
