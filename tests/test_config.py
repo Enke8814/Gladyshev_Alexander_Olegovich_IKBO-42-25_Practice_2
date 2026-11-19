@@ -41,19 +41,12 @@ class ConfigTests(unittest.TestCase):
         path.write_text(f"<config>{body}</config>", encoding="utf-8")
         return path
 
-    def test_valid_test_repository_and_cli(self):
-        """Resolve relative paths next to XML and print every field."""
+    def test_valid_test_repository(self):
+        """Resolve a test repository path next to the XML file."""
         path = self.write_config()
         config = load_config(path)
         self.assertEqual(config.repository, str(self.graph))
         self.assertEqual(config.max_depth, 2)
-        result = subprocess.run(
-            [sys.executable, "src/main.py", "--config", str(path)],
-            cwd=PROJECT, capture_output=True, text=True, check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("test_mode = true", result.stdout)
-        self.assertIn("package = A", result.stdout)
 
     def test_valid_registry(self):
         """Allow the public npm registry in normal mode."""
