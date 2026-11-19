@@ -4,5 +4,5 @@
   <repository>https://registry.npmjs.org</repository>
   <test_mode>false</test_mode>
   <output>graph.svg</output>
-  <max_depth>3</max_depth>
+  <max_depth>1</max_depth>
 </config>

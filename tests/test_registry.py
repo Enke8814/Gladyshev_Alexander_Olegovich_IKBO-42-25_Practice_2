@@ -15,6 +15,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT / "src"))
 
 from dependency_graph.registry import RegistryError, direct_dependencies
+from dependency_graph.graph import Graph
 from main import main
 
 
@@ -74,15 +75,19 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryError, "неверный JSON"):
             direct_dependencies("https://registry.npmjs.org", "x")
 
-    @patch("main.direct_dependencies", return_value={"accepts": "~1.3"})
-    def test_cli_prints_direct_dependencies(self, fetch):
-        """Stage two CLI prints direct names and version ranges."""
+    @patch("main.graph_from_config")
+    def test_cli_prints_graph(self, build):
+        """The CLI displays root edges and shortest distances."""
+        build.return_value = Graph(
+            {"express": {"accepts": "~1.3"}, "accepts": {}},
+            {"express": 0, "accepts": 1},
+        )
         output = StringIO()
         with redirect_stdout(output):
             code = main(["--config", str(PROJECT / "config.example.xml")])
         self.assertEqual(code, 0)
-        self.assertIn("accepts: ~1.3", output.getvalue())
-        fetch.assert_called_once()
+        self.assertIn("accepts (~1.3)", output.getvalue())
+        build.assert_called_once()
 
 
 if __name__ == "__main__":

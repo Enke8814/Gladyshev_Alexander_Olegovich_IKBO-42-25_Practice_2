@@ -29,7 +29,9 @@ def _fetch_metadata(repository, package):
     except HTTPError as error:
         if error.code == 404:
             raise RegistryError(f"пакет не найден: {package}") from error
-        raise RegistryError(f"HTTP {error.code} при загрузке {package}") from error
+        raise RegistryError(
+            f"HTTP {error.code} при загрузке {package}"
+        ) from error
     except (URLError, TimeoutError, OSError) as error:
         raise RegistryError(
             f"не удалось загрузить {package}: {error}"

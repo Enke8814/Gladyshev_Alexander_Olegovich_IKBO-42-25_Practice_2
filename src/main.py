@@ -5,11 +5,12 @@ import sys
 from pathlib import Path
 
 from dependency_graph.config import ConfigError, load_config
-from dependency_graph.registry import RegistryError, direct_dependencies
+from dependency_graph.graph import GraphError, format_graph, graph_from_config
+from dependency_graph.registry import RegistryError
 
 
 def main(argv=None):
-    """Read settings and show the package's direct dependencies."""
+    """Read settings and print the reachable dependency graph."""
     parser = argparse.ArgumentParser(
         description="Визуализация зависимостей npm (вариант 7)"
     )
@@ -24,20 +25,15 @@ def main(argv=None):
         print(f"Ошибка конфигурации: {error}", file=sys.stderr)
         return 2
 
-    if config.test_mode:
-        print("Тестовый репозиторий будет добавлен на этапе 3", file=sys.stderr)
-        return 2
     try:
-        dependencies = direct_dependencies(config.repository, config.package)
-    except RegistryError as error:
+        graph = graph_from_config(config)
+    except (RegistryError, GraphError) as error:
         print(f"Ошибка репозитория: {error}", file=sys.stderr)
         return 1
 
-    print(f"Прямые зависимости {config.package} (версия latest):")
-    if not dependencies:
-        print("(нет зависимостей)")
-    for name, version_range in dependencies.items():
-        print(f"{name}: {version_range}")
+    print(f"Граф зависимостей {config.package} "
+          f"(максимальная глубина {config.max_depth}):")
+    print(format_graph(graph))
     return 0
 
 

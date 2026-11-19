@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <package>A</package>
+  <repository>branching.json</repository>
+  <test_mode>true</test_mode>
+  <output>branching.svg</output>
+  <max_depth>2</max_depth>
+</config>

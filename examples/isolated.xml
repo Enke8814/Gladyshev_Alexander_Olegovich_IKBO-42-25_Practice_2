@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <package>A</package>
+  <repository>isolated.json</repository>
+  <test_mode>true</test_mode>
+  <output>isolated.svg</output>
+  <max_depth>2</max_depth>
+</config>
