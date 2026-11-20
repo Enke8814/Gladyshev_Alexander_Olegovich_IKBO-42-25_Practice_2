@@ -7,6 +7,7 @@ from pathlib import Path
 from dependency_graph.config import ConfigError, load_config
 from dependency_graph.graph import GraphError, graph_from_config
 from dependency_graph.registry import RegistryError
+from dependency_graph.render import RenderError, save_svg, to_dot
 
 
 def main(argv=None):
@@ -31,10 +32,14 @@ def main(argv=None):
         print(f"Ошибка репозитория: {error}", file=sys.stderr)
         return 1
 
-    print(f"Порядок загрузки зависимостей {config.package} "
-          f"(максимальная глубина {config.max_depth}):")
-    for number, package in enumerate(graph.load_order, start=1):
-        print(f"{number}. {package} (глубина {graph.depths[package]})")
+    source = to_dot(graph)
+    try:
+        save_svg(source, config.output)
+    except RenderError as error:
+        print(f"Ошибка визуализации: {error}", file=sys.stderr)
+        return 1
+    print(source, end="")
+    print(f"SVG сохранён: {config.output}")
     return 0
 
 

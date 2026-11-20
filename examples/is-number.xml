@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <package>is-number</package>
+  <repository>https://registry.npmjs.org</repository>
+  <test_mode>false</test_mode>
+  <output>is-number.svg</output>
+  <max_depth>1</max_depth>
+</config>

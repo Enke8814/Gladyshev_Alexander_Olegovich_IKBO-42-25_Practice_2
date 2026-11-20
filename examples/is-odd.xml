@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+  <package>is-odd</package>
+  <repository>https://registry.npmjs.org</repository>
+  <test_mode>false</test_mode>
+  <output>is-odd.svg</output>
+  <max_depth>2</max_depth>
+</config>

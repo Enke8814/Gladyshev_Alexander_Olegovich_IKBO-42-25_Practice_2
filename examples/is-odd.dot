@@ -1,0 +1,8 @@
+digraph npm_dependencies {
+  graph [rankdir=LR, bgcolor=transparent, nodesep=0.32, ranksep=0.9];
+  node [shape=box, style="rounded,filled", fillcolor="#EAF3FF", color="#3973B9", fontname="DejaVu Sans", fontsize=12, margin="0.18,0.12"];
+  edge [color="#64748B", fontname="DejaVu Sans", fontsize=10];
+  "is-odd" [label="is-odd\nглубина 0", fillcolor="#1D4ED8", fontcolor="white"];
+  "is-number" [label="is-number\nглубина 1"];
+  "is-odd" -> "is-number" [label="^6.0.0"];
+}

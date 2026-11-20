@@ -75,9 +75,10 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RegistryError, "неверный JSON"):
             direct_dependencies("https://registry.npmjs.org", "x")
 
+    @patch("main.save_svg")
     @patch("main.graph_from_config")
-    def test_cli_prints_load_order(self, build):
-        """The CLI displays the deterministic BFS fetch order."""
+    def test_cli_prints_dot_and_saves_svg(self, build, save):
+        """The CLI displays DOT and sends it to the SVG renderer."""
         build.return_value = Graph(
             {"express": {"accepts": "~1.3"}, "accepts": {}},
             {"express": 0, "accepts": 1},
@@ -87,8 +88,9 @@ class RegistryTests(unittest.TestCase):
         with redirect_stdout(output):
             code = main(["--config", str(PROJECT / "config.example.xml")])
         self.assertEqual(code, 0)
-        self.assertIn("1. express (глубина 0)", output.getvalue())
-        self.assertIn("2. accepts (глубина 1)", output.getvalue())
+        self.assertIn('"express" -> "accepts"', output.getvalue())
+        self.assertIn("SVG сохранён:", output.getvalue())
+        save.assert_called_once()
         build.assert_called_once()
 
 
