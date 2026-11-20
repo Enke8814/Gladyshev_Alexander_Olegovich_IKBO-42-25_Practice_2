@@ -47,11 +47,14 @@ def save_svg(dot_source, destination):
             ["dot", "-Tsvg"], input=dot_source.encode("utf-8"),
             capture_output=True, check=True,
         )
-        destination.write_bytes(result.stdout)
     except FileNotFoundError as error:
         raise RenderError("установите Graphviz (команда dot)") from error
     except subprocess.CalledProcessError as error:
         detail = error.stderr.decode("utf-8", errors="replace").strip()
         raise RenderError(f"ошибка Graphviz: {detail}") from error
+    except OSError as error:
+        raise RenderError(f"не удалось запустить Graphviz: {error}") from error
+    try:
+        destination.write_bytes(result.stdout)
     except OSError as error:
         raise RenderError(f"не удалось сохранить SVG: {error}") from error

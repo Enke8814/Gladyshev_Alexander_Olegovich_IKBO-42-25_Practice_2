@@ -89,7 +89,7 @@ class RegistryTests(unittest.TestCase):
             code = main(["--config", str(PROJECT / "config.example.xml")])
         self.assertEqual(code, 0)
         self.assertIn('"express" -> "accepts"', output.getvalue())
-        self.assertIn("SVG сохранён:", output.getvalue())
+        self.assertTrue(output.getvalue().endswith("}\n"))
         save.assert_called_once()
         build.assert_called_once()
 

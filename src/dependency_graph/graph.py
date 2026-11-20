@@ -37,17 +37,22 @@ def load_test_repository(path):
         raise GraphError("тестовый репозиторий должен быть JSON-объектом")
     result = {}
     for name, dependencies in data.items():
-        if not TEST_NAME.fullmatch(name):
-            raise GraphError(f"неверное имя тестового пакета: {name}")
-        if not isinstance(dependencies, list):
-            raise GraphError(f"зависимости {name} должны быть списком")
-        if any(not isinstance(dep, str) or not TEST_NAME.fullmatch(dep)
-               for dep in dependencies):
-            raise GraphError(f"неверное имя зависимости пакета {name}")
-        if len(dependencies) != len(set(dependencies)):
-            raise GraphError(f"повторная зависимость пакета {name}")
+        _validate_test_dependencies(name, dependencies)
         result[name] = {dep: "" for dep in dependencies}
     return result
+
+
+def _validate_test_dependencies(name, dependencies):
+    """Validate one adjacency entry and reject repeated child names."""
+    if not TEST_NAME.fullmatch(name):
+        raise GraphError(f"неверное имя тестового пакета: {name}")
+    if not isinstance(dependencies, list):
+        raise GraphError(f"зависимости {name} должны быть списком")
+    if any(not isinstance(dep, str) or not TEST_NAME.fullmatch(dep)
+           for dep in dependencies):
+        raise GraphError(f"неверное имя зависимости пакета {name}")
+    if len(dependencies) != len(set(dependencies)):
+        raise GraphError(f"повторная зависимость пакета {name}")
 
 
 def build_graph(root, max_depth, dependencies_for):

@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 
 
 FIELDS = ("package", "repository", "test_mode", "output", "max_depth")
+MAX_PACKAGE_LENGTH = 214
 PACKAGE_NAME = re.compile(
     r"^(?:@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$"
 )
@@ -49,15 +50,20 @@ def _read_fields(path):
         raise ConfigError("корневой элемент должен быть <config> без атрибутов")
     values = {}
     for node in root:
-        if node.tag not in FIELDS or node.tag in values:
-            raise ConfigError(f"неизвестный или повторный параметр: {node.tag}")
-        if node.attrib or list(node):
-            raise ConfigError(f"параметр {node.tag} должен содержать текст")
-        values[node.tag] = (node.text or "").strip()
+        _read_node(node, values)
     missing = set(FIELDS) - set(values)
     if missing:
         raise ConfigError(f"отсутствует параметр: {', '.join(sorted(missing))}")
     return values
+
+
+def _read_node(node, values):
+    """Read one flat XML field, rejecting duplicates and attributes."""
+    if node.tag not in FIELDS or node.tag in values:
+        raise ConfigError(f"неизвестный или повторный параметр: {node.tag}")
+    if node.attrib or list(node):
+        raise ConfigError(f"параметр {node.tag} должен содержать текст")
+    values[node.tag] = (node.text or "").strip()
 
 
 def _validate_repository(value, test_mode, base):
@@ -68,12 +74,42 @@ def _validate_repository(value, test_mode, base):
         if not path.is_file():
             raise ConfigError(f"repository: файл не найден: {path}")
         return str(path.resolve())
-    parsed = urlparse(value)
+    return _validate_url(value)
+
+
+def _validate_url(value):
+    """Reject malformed hosts, ports and whitespace before HTTP requests."""
+    try:
+        parsed = urlparse(value)
+        parsed.port
+    except ValueError as error:
+        raise ConfigError(f"repository: неверный URL: {error}") from error
+    if any(character.isspace() for character in value):
+        raise ConfigError("repository: URL содержит пробельные символы")
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
         raise ConfigError("repository: требуется URL http(s) репозитория")
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
         raise ConfigError("repository: URL не должен содержать учётные данные")
     return value.rstrip("/")
+
+
+def _validate_package(package, mode):
+    """Validate package names for the selected repository type."""
+    pattern = r"[A-Z]+" if mode == "true" else PACKAGE_NAME
+    if not re.fullmatch(pattern, package):
+        raise ConfigError("package: некорректное имя пакета")
+    if len(package) > MAX_PACKAGE_LENGTH:
+        raise ConfigError("package: слишком длинное имя пакета")
+
+
+def _validate_depth(value):
+    """Convert a nonnegative decimal depth with a named error."""
+    if not value.isascii() or not value.isdecimal():
+        raise ConfigError("max_depth: требуется целое число от 0")
+    try:
+        return int(value)
+    except ValueError as error:
+        raise ConfigError("max_depth: слишком большое число") from error
 
 
 def _validate_output(value, base):
@@ -95,15 +131,8 @@ def load_config(path):
     mode = values["test_mode"].lower()
     if mode not in ("true", "false"):
         raise ConfigError("test_mode: допустимы только true и false")
-    valid_name = (
-        re.fullmatch(r"[A-Z]+", package) if mode == "true"
-        else PACKAGE_NAME.fullmatch(package)
-    )
-    if not valid_name or len(package) > 214:
-        raise ConfigError("package: некорректное имя пакета")
-    depth = values["max_depth"]
-    if not depth.isascii() or not depth.isdecimal():
-        raise ConfigError("max_depth: требуется целое число от 0")
+    _validate_package(package, mode)
+    depth = _validate_depth(values["max_depth"])
     base = path.parent
     repository = _validate_repository(
         values["repository"], mode == "true", base
@@ -113,6 +142,6 @@ def load_config(path):
         repository=repository,
         test_mode=mode == "true",
         output=_validate_output(values["output"], base),
-        max_depth=int(depth),
+        max_depth=depth,
         source=path,
     )

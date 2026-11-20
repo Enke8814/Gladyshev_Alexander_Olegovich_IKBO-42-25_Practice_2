@@ -1,6 +1,7 @@
 """Read npm package metadata without npm or third-party packages."""
 
 import json
+from http import HTTPStatus
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
@@ -27,7 +28,7 @@ def _fetch_metadata(repository, package):
         with urlopen(request, timeout=TIMEOUT_SECONDS) as response:
             return json.load(response)
     except HTTPError as error:
-        if error.code == 404:
+        if error.code == HTTPStatus.NOT_FOUND:
             raise RegistryError(f"пакет не найден: {package}") from error
         raise RegistryError(
             f"HTTP {error.code} при загрузке {package}"
